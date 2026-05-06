@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DiSC Personality Assessment | Đánh giá tính cách DiSC</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Be+Vietnam+Pro:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #f7f4ef;
+  --surface: #ffffff;
+  --surface2: #efeae3;
+  --border: #ddd6cc;
+  --text: #1c1814;
+  --dim: #8a7e74;
+  --accent: #2d4a8c;
+  --accent-light: #e8edf8;
+  --d: #c0392b; --d-bg: #fdecea; --d-light: #f8d7d5;
+  --i: #e67e22; --i-bg: #fef3e2; --i-light: #fde8c5;
+  --s: #27ae60; --s-bg: #e8f8ef; --s-light: #c8efd8;
+  --c: #2980b9; --c-bg: #e8f4fc; --c-light: #c5e0f0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Be Vietnam Pro', 'Noto Sans JP', sans-serif; min-height: 100vh; }
+#app { max-width: 740px; margin: 0 auto; padding: 32px 20px 80px; }
+
+.topbar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--text); padding-bottom: 12px; margin-bottom: 36px; }
+.topbar-title { font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); }
+.topbar-step { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--dim); }
+
+.step-dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 32px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); transition: all .3s; }
+.dot.done { background: var(--accent); }
+.dot.active { background: var(--accent); transform: scale(1.3); }
+
+.eyebrow { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+.section-title { font-size: clamp(22px,4vw,34px); font-weight: 900; line-height: 1.2; letter-spacing: -0.5px; margin-bottom: 14px; }
+.section-desc { font-size: 14px; color: var(--dim); line-height: 1.95; margin-bottom: 28px; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px; margin-bottom: 14px; }
+
+/* 名前入力 */
+.name-input-wrap { position: relative; margin-bottom: 24px; }
+.name-input { width: 100%; padding: 16px 18px; font-family: 'Be Vietnam Pro', 'Noto Sans JP', sans-serif; font-size: 16px; border: 2px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); outline: none; transition: border .2s; }
+.name-input:focus { border-color: var(--accent); }
+.name-label { position: absolute; top: -10px; left: 14px; background: var(--bg); padding: 0 6px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; }
+
+/* 質問カード - 強制選択式 */
+.q-progress { display: flex; gap: 3px; margin-bottom: 20px; }
+.q-pip { flex: 1; height: 4px; border-radius: 2px; background: var(--border); transition: background .3s; }
+.q-pip.done { background: var(--accent); }
+
+.q-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 26px; margin-bottom: 16px; position: relative; overflow: hidden; }
+.q-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--accent); }
+.q-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--dim); margin-bottom: 14px; letter-spacing: 2px; }
+
+.q-instruction { display: flex; gap: 8px; margin-bottom: 16px; }
+.q-badge { padding: 4px 12px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+.badge-most { background: #1a237e; color: white; }
+.badge-least { background: #f5f5f5; color: #666; border: 1px solid #ddd; }
+
+.choice-list { display: flex; flex-direction: column; gap: 8px; }
+.choice-item { display: grid; grid-template-columns: 48px 48px 1fr; align-items: center; gap: 10px; padding: 14px 16px; background: var(--surface2); border: 1.5px solid var(--border); border-radius: 10px; transition: background .15s; }
+.choice-item:hover { background: #ede8e0; }
+.choice-item.most-selected { background: #e8edf8; border-color: #2d4a8c; }
+.choice-item.least-selected { background: #f8f3ee; border-color: #bbb; }
+.choice-item.both { background: #e8edf8; border-color: #2d4a8c; }
+
+.choice-btn { width: 36px; height: 36px; border-radius: 8px; border: 2px solid var(--border); background: white; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: .5px; transition: all .15s; color: var(--dim); display: flex; align-items: center; justify-content: center; }
+.choice-btn.most-active { background: #1a237e; border-color: #1a237e; color: white; }
+.choice-btn.least-active { background: #555; border-color: #555; color: white; }
+.choice-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+.choice-text-vi { font-size: 15px; font-weight: 600; line-height: 1.55; color: var(--text); }
+.choice-text-en { font-size: 11px; color: var(--dim); line-height: 1.5; font-style: italic; margin-top: 2px; }
+
+.choice-legend { display: flex; gap: 16px; margin-bottom: 16px; font-size: 12px; color: var(--dim); }
+.legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: middle; }
+
+/* 結果 */
+.type-banner { border-radius: 14px; padding: 32px; margin-bottom: 20px; text-align: center; }
+.type-banner.d { background: var(--d-bg); border: 2px solid var(--d); }
+.type-banner.i { background: var(--i-bg); border: 2px solid var(--i); }
+.type-banner.s { background: var(--s-bg); border: 2px solid var(--s); }
+.type-banner.c { background: var(--c-bg); border: 2px solid var(--c); }
+.type-emoji { font-size: 52px; margin-bottom: 12px; }
+.type-name-vi { font-size: 26px; font-weight: 900; margin-bottom: 4px; }
+.type-name-en { font-size: 13px; color: var(--dim); margin-bottom: 2px; }
+.type-name-jp { font-size: 12px; color: var(--dim); margin-bottom: 16px; }
+.type-tagline { font-size: 14px; font-weight: 700; }
+
+.score-bars { margin-bottom: 20px; }
+.score-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.score-row-label { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; width: 14px; text-align: center; }
+.score-bar-wrap { flex: 1; height: 10px; background: var(--surface2); border-radius: 5px; overflow: hidden; }
+.score-bar-fill { height: 100%; border-radius: 5px; transition: width 1.2s ease; }
+.score-row-num { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--dim); width: 40px; text-align: right; }
+
+.traits-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.trait-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.trait-card h4 { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--dim); margin-bottom: 10px; text-transform: uppercase; }
+.trait-card ul { list-style: none; }
+.trait-card li { font-size: 13px; line-height: 1.85; padding-left: 14px; position: relative; }
+.trait-card li::before { content: '·'; position: absolute; left: 0; color: var(--dim); }
+
+.desc-section { margin-bottom: 16px; }
+.desc-section h4 { font-size: 10px; font-family: 'DM Mono', monospace; letter-spacing: 2px; color: var(--dim); margin-bottom: 8px; text-transform: uppercase; }
+.desc-section ul { list-style: none; }
+.desc-section li { font-size: 13px; line-height: 1.85; padding-left: 14px; position: relative; color: #444; }
+.desc-section li::before { content: '·'; position: absolute; left: 0; color: var(--dim); }
+
+.profile-badge { display: inline-block; padding: 6px 20px; border-radius: 20px; font-family: 'DM Mono', monospace; font-weight: 500; font-size: 13px; color: white; margin-top: 8px; }
+
+/* ボタン */
+.btn-primary { display: block; width: 100%; padding: 15px; background: var(--accent); border: none; border-radius: 8px; color: #fff; font-family: 'Be Vietnam Pro', 'Noto Sans JP', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; transition: all .2s; letter-spacing: 1px; }
+.btn-primary:hover { background: #3d5fb0; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(45,74,140,.3); }
+.btn-secondary { display: inline-block; padding: 13px 32px; background: transparent; border: 2px solid var(--accent); border-radius: 8px; color: var(--accent); font-family: 'Be Vietnam Pro', 'Noto Sans JP', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all .2s; }
+.btn-secondary:hover { background: var(--accent); color: #fff; }
+
+/* イントロ */
+.intro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+.intro-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+.intro-num { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; color: var(--accent); margin-bottom: 6px; line-height: 1; }
+.intro-label { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.intro-desc { font-size: 13px; color: var(--dim); line-height: 1.75; }
+
+.type-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
+.type-chip { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; }
+.chip-d { background: var(--d-bg); color: var(--d); }
+.chip-i { background: var(--i-bg); color: var(--i); }
+.chip-s { background: var(--s-bg); color: var(--s); }
+.chip-c { background: var(--c-bg); color: var(--c); }
+
+@keyframes fadeUp { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+.anim { animation: fadeUp .35s ease; }
+
+@media (max-width: 520px) {
+  .intro-grid, .traits-grid { grid-template-columns: 1fr; }
+  .scale-btn { font-size: 12px; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ★ GASデプロイ後のURLをここに貼り付けてください
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxz8obEg_rlKSjmi2z058jwRB41FDWPsfKx-_DwRVblKJjsZd2Odsgo6tTMZIBuSM5fnA/exec';
+
+function sendResult(name, primary, secondary, scores) {
+  if (!GAS_URL || GAS_URL === 'YOUR_GAS_WEBAPP_URL_HERE') return;
+  fetch(GAS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, primary, secondary, scores })
+  }).catch(err => console.error('Send error:', err));
+}
+
+const DISC_TYPES = {
+  D: {
+    key: 'D', emoji: '🦁',
+    nameJP: 'コントローラー（主導型）',
+    nameEN: 'Controller (Dominance)',
+    nameVI: 'Người Kiểm Soát (Thống Trị)',
+    taglineJP: '「判断の自由」を何より重んじる意思決定派',
+    taglineVI: 'Người ra quyết định, coi trọng sự tự do phán đoán',
+    color: '#c0392b', bgColor: '#fdecea', bannerCls: 'd',
+    traitsJP: ['決断が早く、行動力がある', '結果・目標達成を最重視', '競争心が強くリーダーシップを発揮', '直接的なコミュニケーションを好む'],
+    traitsVI: ['Ra quyết định nhanh và hành động quyết đoán', 'Tập trung vào kết quả và mục tiêu', 'Tinh thần cạnh tranh cao, lãnh đạo mạnh', 'Thích giao tiếp trực tiếp'],
+    traitsEN: ['Makes quick decisions and takes action', 'Focuses on results and goals', 'Highly competitive with strong leadership', 'Prefers direct communication'],
+    relJP: ['人を寄せつけない印象を与えがち', 'コントロールされることを強く嫌う', '論拠があれば反対意見も聞く', '素直に飛び込む人には心を開く'],
+    relVI: ['Có thể gây ấn tượng khó gần', 'Ghét bị kiểm soát', 'Lắng nghe ý kiến trái chiều nếu có lý', 'Cởi mở với người chân thành'],
+  },
+  i: {
+    key: 'i', emoji: '🌟',
+    nameJP: 'プロモーター（感化型）',
+    nameEN: 'Promoter (Influence)',
+    nameVI: 'Người Quảng Bá (Ảnh Hưởng)',
+    taglineJP: '「影響力と承認」を原動力とする行動派',
+    taglineVI: 'Người hành động, lấy ảnh hưởng và sự công nhận làm động lực',
+    color: '#e67e22', bgColor: '#fef3e2', bannerCls: 'i',
+    traitsJP: ['明るく社交的で人を惹きつける', 'アイデアが豊富で創造的', 'ノリと勢いで人を巻き込むのが得意', '楽観的でポジティブ思考'],
+    traitsVI: ['Vui vẻ, hòa đồng và thu hút mọi người', 'Nhiều ý tưởng và sáng tạo', 'Giỏi lôi cuốn người khác tham gia', 'Lạc quan và tư duy tích cực'],
+    traitsEN: ['Bright, sociable and draws people in', 'Full of ideas and creative', 'Great at involving others', 'Optimistic and positive thinker'],
+    relJP: ['社交的でオープン', '話好きで感情表現が豊か', '人を承認し承認されることが好き', '周りと衝突することもある'],
+    relVI: ['Hướng ngoại và cởi mở', 'Thích nói chuyện, biểu đạt cảm xúc', 'Thích công nhận và được công nhận', 'Đôi khi xung đột với người khác'],
+  },
+  S: {
+    key: 'S', emoji: '🌿',
+    nameJP: 'サポーター（安定型）',
+    nameEN: 'Supporter (Steadiness)',
+    nameVI: 'Người Hỗ Trợ (Ổn Định)',
+    taglineJP: '「合意と関係」を何より大切にする協調派',
+    taglineVI: 'Người hợp tác, coi trọng sự đồng thuận và các mối quan hệ',
+    color: '#27ae60', bgColor: '#e8f8ef', bannerCls: 's',
+    traitsJP: ['協調性が高くチームの調和を大切にする', '忍耐強く、じっくり取り組む', '聞き上手で周囲への配慮が強い', '安定した環境・長期的な関係を好む'],
+    traitsVI: ['Hợp tác cao, coi trọng sự hòa hợp nhóm', 'Kiên nhẫn và kỹ lưỡng trong công việc', 'Lắng nghe tốt, quan tâm đến người khác', 'Thích môi trường ổn định và quan hệ lâu dài'],
+    traitsEN: ['Highly cooperative, values team harmony', 'Patient and thorough', 'Great listener with consideration for others', 'Prefers stable environments'],
+    relJP: ['他者の気持ちに敏感', '親密な人間関係を築く', '対立を避ける', '感謝や愛情を求める'],
+    relVI: ['Nhạy cảm với cảm xúc người khác', 'Xây dựng mối quan hệ thân thiết', 'Tránh xung đột', 'Tìm kiếm sự biết ơn và tình cảm'],
+  },
+  C: {
+    key: 'C', emoji: '🔬',
+    nameJP: 'アナライザー（分析型）',
+    nameEN: 'Analyzer (Conscientiousness)',
+    nameVI: 'Người Phân Tích (Tận Tâm)',
+    taglineJP: '「正確さ」を何より重んじる慎重派',
+    taglineVI: 'Người thận trọng, coi trọng sự chính xác hơn tất cả',
+    color: '#2980b9', bgColor: '#e8f4fc', bannerCls: 'c',
+    traitsJP: ['論理的・分析的思考', 'データ・根拠を重視する慎重派', '高い品質基準を持ち正確さにこだわる', 'ルール・手順を大切にする'],
+    traitsVI: ['Tư duy logic và phân tích', 'Thận trọng, coi trọng dữ liệu và bằng chứng', 'Tiêu chuẩn chất lượng cao, chú trọng độ chính xác', 'Tôn trọng quy tắc và quy trình'],
+    traitsEN: ['Logical and analytical thinker', 'Cautious, values data and evidence', 'High quality standards, attention to accuracy', 'Values rules and procedures'],
+    relJP: ['データ収集・分析が得意', '計画通りに進めたい', '感情をあまり表に出さない', '客観・論理で物事を判断する'],
+    relVI: ['Giỏi thu thập và phân tích dữ liệu', 'Muốn tiến hành theo kế hoạch', 'Ít biểu lộ cảm xúc ra bên ngoài', 'Phán đoán dựa trên logic khách quan'],
+  }
+};
+
+// ============================================================
+// 14問 強制選択式（Most / Least）
+// 各問にD/i/S/Cの選択肢が1つずつ（順序はシャッフル済み）
+// Most: +2点, Least: -1点
+// ============================================================
+const QUESTIONS = [
+  {
+    scenario: { vi: 'Trong công việc hàng ngày, tôi thường...', en: 'In my daily work, I tend to...' },
+    choices: [
+      { type:'D', vi:'Tập trung vào kết quả và hành động nhanh chóng', en:'Focus on results and move quickly' },
+      { type:'i', vi:'Truyền cảm hứng cho mọi người bằng sự nhiệt tình', en:'Energize others with enthusiasm' },
+      { type:'S', vi:'Hỗ trợ đồng nghiệp và giữ không khí hòa thuận', en:'Support teammates and keep harmony' },
+      { type:'C', vi:'Kiểm tra kỹ lưỡng để đảm bảo chất lượng', en:'Check carefully to ensure quality' },
+    ]
+  },
+  {
+    scenario: { vi: 'Khi đối mặt với một quyết định khó khăn, tôi...', en: 'When facing a tough decision, I...' },
+    choices: [
+      { type:'D', vi:'Quyết định nhanh và chịu trách nhiệm về kết quả', en:'Decide quickly and own the outcome' },
+      { type:'i', vi:'Hỏi ý kiến nhiều người và chọn phương án thú vị nhất', en:'Ask others and pick the most exciting option' },
+      { type:'S', vi:'Tìm kiếm sự đồng thuận của nhóm trước khi quyết định', en:'Seek group consensus before deciding' },
+      { type:'C', vi:'Thu thập đủ dữ liệu và phân tích các lựa chọn', en:'Gather data and analyze all options thoroughly' },
+    ]
+  },
+  {
+    scenario: { vi: 'Trong một cuộc họp nhóm, tôi thường...', en: 'In a group meeting, I usually...' },
+    choices: [
+      { type:'D', vi:'Dẫn dắt cuộc thảo luận và đưa ra hướng đi rõ ràng', en:'Lead the discussion and set a clear direction' },
+      { type:'i', vi:'Chia sẻ ý tưởng sáng tạo và tạo không khí sôi nổi', en:'Share creative ideas and create energy' },
+      { type:'S', vi:'Lắng nghe tất cả mọi người trước khi đưa ra ý kiến', en:'Listen to everyone before sharing my view' },
+      { type:'C', vi:'Đặt câu hỏi để làm rõ dữ liệu và logic của vấn đề', en:'Ask questions to clarify data and logic' },
+    ]
+  },
+  {
+    scenario: { vi: 'Khi bắt đầu một dự án mới, điều quan trọng nhất với tôi là...', en: 'When starting a new project, what matters most to me is...' },
+    choices: [
+      { type:'D', vi:'Xác định mục tiêu rõ ràng và bắt tay vào ngay', en:'Setting clear goals and getting started immediately' },
+      { type:'i', vi:'Xây dựng sự hứng khởi trong nhóm và chia sẻ tầm nhìn', en:'Building excitement in the team and sharing the vision' },
+      { type:'S', vi:'Đảm bảo mọi người đều hiểu vai trò và cảm thấy thoải mái', en:'Making sure everyone understands their role and feels comfortable' },
+      { type:'C', vi:'Lập kế hoạch chi tiết và xác định rõ quy trình thực hiện', en:'Creating a detailed plan and defining clear procedures' },
+    ]
+  },
+  {
+    scenario: { vi: 'Khi nhận phản hồi tiêu cực về công việc của mình, tôi...', en: 'When I receive negative feedback about my work, I...' },
+    choices: [
+      { type:'D', vi:'Xem đó là thách thức và nhanh chóng tìm cách cải thiện', en:'See it as a challenge and quickly look for ways to improve' },
+      { type:'i', vi:'Cảm thấy buồn nhưng sớm lấy lại tinh thần và thử lại', en:'Feel hurt but bounce back quickly and try again' },
+      { type:'S', vi:'Suy nghĩ nhiều về tác động đến mối quan hệ với người phản hồi', en:'Think carefully about the impact on my relationship with the person' },
+      { type:'C', vi:'Phân tích kỹ phản hồi để tìm ra lỗi cụ thể cần sửa', en:'Carefully analyze the feedback to identify specific errors to fix' },
+    ]
+  },
+  {
+    scenario: { vi: 'Khi làm việc theo nhóm, tôi đóng vai trò...', en: 'When working in a team, my natural role is...' },
+    choices: [
+      { type:'D', vi:'Người ra quyết định — tôi thích dẫn đầu và thúc đẩy tiến độ', en:'The decision-maker — I like to lead and push progress' },
+      { type:'i', vi:'Người truyền cảm hứng — tôi giúp mọi người hứng thú với mục tiêu', en:'The inspirer — I help people get excited about the goal' },
+      { type:'S', vi:'Người hỗ trợ — tôi đảm bảo không ai bị bỏ lại phía sau', en:'The supporter — I make sure no one is left behind' },
+      { type:'C', vi:'Người phân tích — tôi đảm bảo kế hoạch được thực hiện đúng cách', en:'The analyst — I make sure the plan is executed correctly' },
+    ]
+  },
+  {
+    scenario: { vi: 'Khi có xung đột trong nhóm, tôi thường...', en: 'When there is conflict in the team, I tend to...' },
+    choices: [
+      { type:'D', vi:'Đối mặt trực tiếp và giải quyết vấn đề ngay lập tức', en:'Confront it directly and resolve the issue immediately' },
+      { type:'i', vi:'Dùng sự hài hước và năng lượng tích cực để xoa dịu tình hình', en:'Use humor and positive energy to ease the tension' },
+      { type:'S', vi:'Cố gắng hòa giải và tìm điểm chung cho tất cả các bên', en:'Try to mediate and find common ground for all sides' },
+      { type:'C', vi:'Phân tích nguyên nhân và đề xuất giải pháp dựa trên dữ liệu', en:'Analyze root causes and propose solutions based on facts' },
+    ]
+  },
+  {
+    scenario: { vi: 'Khi bị giao một nhiệm vụ mới hoàn toàn, tôi...', en: 'When assigned a completely new task, I...' },
+    choices: [
+      { type:'D', vi:'Nhảy vào làm ngay và học hỏi trong quá trình thực hiện', en:'Jump right in and learn as I go' },
+      { type:'i', vi:'Tìm cách làm cho nhiệm vụ đó trở nên thú vị và chia sẻ với người khác', en:'Find a way to make it fun and share it with others' },
+      { type:'S', vi:'Hỏi kỹ để hiểu rõ kỳ vọng trước khi bắt đầu', en:'Ask carefully to fully understand expectations before starting' },
+      { type:'C', vi:'Nghiên cứu kỹ lưỡng và lập kế hoạch trước khi hành động', en:'Research thoroughly and plan carefully before taking action' },
+    ]
+  },
+  {
+    scenario: { vi: 'Điều làm tôi cảm thấy thành công nhất trong công việc là...', en: 'What makes me feel most successful at work is...' },
+    choices: [
+      { type:'D', vi:'Đạt được mục tiêu quan trọng, đặc biệt là vượt qua thử thách', en:'Achieving major goals, especially overcoming challenges' },
+      { type:'i', vi:'Được mọi người công nhận và tạo ra tác động tích cực', en:'Being recognized by others and creating a positive impact' },
+      { type:'S', vi:'Thấy đội nhóm hoạt động tốt và mọi người đều hài lòng', en:'Seeing the team functioning well and everyone satisfied' },
+      { type:'C', vi:'Hoàn thành công việc chính xác, không có lỗi', en:'Completing work accurately with no errors' },
+    ]
+  },
+  {
+    scenario: { vi: 'Khi có quá nhiều việc phải làm cùng một lúc, tôi...', en: 'When I have too many things to do at once, I...' },
+    choices: [
+      { type:'D', vi:'Ưu tiên những gì có tác động lớn nhất và bỏ qua phần còn lại', en:'Prioritize what has the biggest impact and drop the rest' },
+      { type:'i', vi:'Nhờ người khác giúp và biến nó thành hoạt động nhóm vui vẻ', en:'Get others involved and turn it into a fun group activity' },
+      { type:'S', vi:'Lập danh sách việc cần làm và xử lý từng việc một cách cẩn thận', en:'Make a to-do list and handle each task carefully one by one' },
+      { type:'C', vi:'Sắp xếp theo hệ thống và đảm bảo mỗi việc được thực hiện đúng', en:'Organize systematically and ensure each task is done correctly' },
+    ]
+  },
+  {
+    scenario: { vi: 'Khi môi trường làm việc thay đổi đột ngột, tôi...', en: 'When the work environment changes suddenly, I...' },
+    choices: [
+      { type:'D', vi:'Thích nghi nhanh chóng và tìm cơ hội trong sự thay đổi', en:'Adapt quickly and find opportunities in the change' },
+      { type:'i', vi:'Hứng khởi với điều mới và khuyến khích mọi người đón nhận', en:'Get excited about what\'s new and encourage others to embrace it' },
+      { type:'S', vi:'Cần thời gian để quen dần và muốn có sự hỗ trợ từ nhóm', en:'Need time to adjust and want support from the team' },
+      { type:'C', vi:'Muốn hiểu rõ lý do thay đổi và các quy trình mới trước khi thực hiện', en:'Want to understand the reason for change and new procedures before acting' },
+    ]
+  },
+  {
+    scenario: { vi: 'Khi trình bày ý tưởng trước người khác, tôi...', en: 'When presenting ideas to others, I...' },
+    choices: [
+      { type:'D', vi:'Đi thẳng vào vấn đề và kết luận ngay từ đầu', en:'Get straight to the point and lead with the conclusion' },
+      { type:'i', vi:'Kể chuyện sinh động và dùng cảm xúc để thu hút người nghe', en:'Tell vivid stories and use emotion to engage the audience' },
+      { type:'S', vi:'Đảm bảo mọi người hiểu và cảm thấy thoải mái với ý tưởng', en:'Make sure everyone understands and feels comfortable with the idea' },
+      { type:'C', vi:'Chuẩn bị dữ liệu, số liệu và phân tích chi tiết để hỗ trợ lập luận', en:'Prepare data, numbers and detailed analysis to support the argument' },
+    ]
+  },
+  {
+    scenario: { vi: 'Điều khiến tôi khó chịu nhất trong công việc là...', en: 'What frustrates me most at work is...' },
+    choices: [
+      { type:'D', vi:'Quyết định bị trì hoãn hoặc không ai dám hành động', en:'Decisions being delayed or no one willing to take action' },
+      { type:'i', vi:'Môi trường quá nghiêm túc, thiếu năng lượng và sự vui vẻ', en:'An overly serious environment lacking energy and fun' },
+      { type:'S', vi:'Xung đột kéo dài hoặc không khí nhóm căng thẳng', en:'Prolonged conflict or a tense team atmosphere' },
+      { type:'C', vi:'Công việc được thực hiện ẩu, thiếu chuẩn mực hoặc có lỗi', en:'Work done sloppily, without standards or full of errors' },
+    ]
+  },
+  {
+    scenario: { vi: 'Người khác thường mô tả tôi là...', en: 'Others would most likely describe me as...' },
+    choices: [
+      { type:'D', vi:'Quyết đoán, tự tin và không ngại thách thức', en:'Decisive, confident and unafraid of challenges' },
+      { type:'i', vi:'Nhiệt tình, vui vẻ và truyền cảm hứng', en:'Enthusiastic, fun and inspiring' },
+      { type:'S', vi:'Đáng tin cậy, kiên nhẫn và luôn sẵn sàng giúp đỡ', en:'Reliable, patient and always ready to help' },
+      { type:'C', vi:'Cẩn thận, chính xác và có tổ chức', en:'Careful, accurate and well-organized' },
+    ]
+  },
+];
+
+let st = {
+  screen: 'intro',
+  name: '',
+  // answers[q] = { most: typeKey or null, least: typeKey or null }
+  answers: Array.from({length: 14}, () => ({ most: null, least: null })),
+  currentQ: 0,
+};
+
+// ==========================================
+// レンダー
+// ==========================================
+function topBar(s) {
+  return `<div class="topbar"><span class="topbar-title">DiSC PERSONALITY ASSESSMENT</span><span class="topbar-step">${s}</span></div>`;
+}
+function dots(active) {
+  return `<div class="step-dots">${[0,1,2,3].map(i=>`<div class="dot ${i<active?'done':i===active?'active':''}"></div>`).join('')}</div>`;
+}
+
+function renderIntro() {
+  return `${topBar('STEP 1 / 4 — はじめに / Giới thiệu')}${dots(0)}
+  <div class="anim">
+    <div class="eyebrow">WHAT IS DiSC?</div>
+    <h1 class="section-title">あなたのタイプを<br>知ることから始まる</h1>
+    <p class="section-desc">DiSCは世界中で活用されているパーソナリティ診断ツールです。4つのタイプを知ることで、自己理解・相互理解・コミュニケーション改善に役立てることができます。<br><br>DiSC là công cụ đánh giá tính cách được sử dụng trên toàn thế giới. Hiểu 4 kiểu người giúp cải thiện sự tự nhận thức và giao tiếp.</p>
+
+    <div class="type-chips">
+      <div class="type-chip chip-d">🦁 D — Controller | Người Kiểm Soát</div>
+      <div class="type-chip chip-i">🌟 i — Promoter | Người Quảng Bá</div>
+      <div class="type-chip chip-s">🌿 S — Supporter | Người Hỗ Trợ</div>
+      <div class="type-chip chip-c">🔬 C — Analyzer | Người Phân Tích</div>
+    </div>
+
+    <div class="intro-grid">
+      <div class="intro-item">
+        <div class="intro-num">14</div>
+        <div class="intro-label">質問数 / Số câu hỏi</div>
+        <div class="intro-desc">各問4択から「最も」「最も当てはまらない」を選ぶ形式。<br>Mỗi câu chọn "MOST" và "LEAST" trong 4 lựa chọn.</div>
+      </div>
+      <div class="intro-item">
+        <div class="intro-num">~3分</div>
+        <div class="intro-label">所要時間 / Thời gian</div>
+        <div class="intro-desc">直感で答えてください。正解・不正解はありません。<br>Trả lời theo bản năng. Không có đúng sai.</div>
+      </div>
+      <div class="intro-item">
+        <div class="intro-num">2</div>
+        <div class="intro-label">言語 / Ngôn ngữ</div>
+        <div class="intro-desc">質問は英語・ベトナム語の2言語で表示されます。<br>Câu hỏi bằng tiếng Anh và tiếng Việt.</div>
+      </div>
+      <div class="intro-item">
+        <div class="intro-num">即時</div>
+        <div class="intro-label">結果 / Kết quả</div>
+        <div class="intro-desc">回答後すぐに診断結果が表示されます。<br>Kết quả hiển thị ngay sau khi hoàn thành.</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:24px">
+      <div class="eyebrow" style="margin-bottom:10px">回答のしかた / Cách trả lời</div>
+      <p style="font-size:14px;line-height:1.95;color:var(--dim)">各文章があなたにどれくらい当てはまるか、<strong style="color:var(--text)">1（全く当てはまらない）〜 5（非常に当てはまる）</strong>で評価してください。<br><br>Đánh giá mức độ phù hợp với bạn: <strong style="color:var(--text)">1（Hoàn toàn không đồng ý）〜 5（Hoàn toàn đồng ý）</strong></p>
+    </div>
+
+    <div class="name-input-wrap">
+      <div class="name-label">TÊN CỦA BẠN / お名前 ★必須</div>
+      <input class="name-input" type="text" id="nameInput" placeholder="Ví dụ: Nguyen Van A" value="${st.name}" oninput="this.style.borderColor=''" />
+    </div>
+
+    <button class="btn-primary" onclick="startAssessment()">診断を開始する / Bắt đầu đánh giá →</button>
+  </div>`;
+}
+
+function renderQuestion() {
+  const q = QUESTIONS[st.currentQ];
+  const ans = st.answers[st.currentQ];
+  const isComplete = ans.most !== null && ans.least !== null;
+  const pips = QUESTIONS.map((_,i) => `<div class="q-pip ${i < st.currentQ ? 'done' : ''}"></div>`).join('');
+
+  const choicesHtml = q.choices.map((c, idx) => {
+    const isMost = ans.most === c.type;
+    const isLeast = ans.least === c.type;
+    let rowCls = '';
+    if (isMost) rowCls = 'most-selected';
+    else if (isLeast) rowCls = 'least-selected';
+
+    const mostDisabled = !isMost && ans.most !== null ? 'disabled' : '';
+    const leastDisabled = !isLeast && ans.least !== null ? 'disabled' : '';
+    // MostとLeastが同じ選択肢にならないよう制御
+    const mostCannotPick = ans.least === c.type;
+    const leastCannotPick = ans.most === c.type;
+
+    return `<div class="choice-item ${rowCls}">
+      <button class="choice-btn ${isMost ? 'most-active' : ''}"
+        onclick="pickMost('${c.type}')"
+        ${mostCannotPick ? 'disabled' : ''}
+        title="Most">MOST</button>
+      <button class="choice-btn ${isLeast ? 'least-active' : ''}"
+        onclick="pickLeast('${c.type}')"
+        ${leastCannotPick ? 'disabled' : ''}
+        title="Least">LEAST</button>
+      <div>
+        <div class="choice-text-vi">${c.vi}</div>
+        <div class="choice-text-en">${c.en}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `${topBar(`STEP 2 / 4 — ${st.currentQ+1} / ${QUESTIONS.length}`)}${dots(1)}
+  <div class="anim">
+    <div class="q-progress">${pips}</div>
+    <div class="q-card">
+      <div class="q-num">QUESTION ${st.currentQ + 1} / ${QUESTIONS.length}</div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:16px;font-weight:700;line-height:1.55;color:var(--text);margin-bottom:4px">${q.scenario.vi}</div>
+        <div style="font-size:12px;color:var(--dim);font-style:italic">${q.scenario.en}</div>
+      </div>
+      <div class="choice-legend">
+        <span><span class="legend-dot" style="background:#1a237e"></span>MOST — Mô tả tôi nhất / 最も当てはまる</span>
+        <span><span class="legend-dot" style="background:#555"></span>LEAST — Ít mô tả tôi nhất / 最も当てはまらない</span>
+      </div>
+      <div class="choice-list">${choicesHtml}</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      ${st.currentQ > 0 ? `<button class="btn-secondary" onclick="prevQ()" style="flex:1;padding:12px">← Quay lại</button>` : '<div style="flex:1"></div>'}
+      <button class="btn-primary" onclick="nextQ()" style="flex:2" ${!isComplete ? 'disabled style="flex:2;opacity:.5;cursor:not-allowed"' : ''}>
+        ${st.currentQ + 1 >= QUESTIONS.length ? 'Xem kết quả / 結果を見る →' : 'Tiếp theo / 次へ →'}
+      </button>
+    </div>
+  </div>`;
+}
+
+function renderResult() {
+  const scores = calcScores();
+
+  const sorted = Object.keys(scores).sort((a,b) => scores[b] - scores[a]);
+  const primary = sorted[0];
+  const secondary = sorted[1];
+  const T = DISC_TYPES[primary];
+  const T2 = DISC_TYPES[secondary];
+  const maxScore = 35;
+
+  const barColors = {D:'#c0392b', i:'#e67e22', S:'#27ae60', C:'#2980b9'};
+  const scoreBars = Object.entries(scores).map(([k,v]) => {
+    const pct = Math.round(v / maxScore * 100);
+    return `<div class="score-row">
+      <div class="score-row-label" style="color:${barColors[k]};font-weight:700">${k}</div>
+      <div class="score-bar-wrap"><div class="score-bar-fill" id="bar-${k}" style="background:${barColors[k]};width:0%"></div></div>
+      <div class="score-row-num">${v}pt</div>
+    </div>`;
+  }).join('');
+
+  function toList(arr) { return arr.map(t=>`<li>${t}</li>`).join(''); }
+
+  return `${topBar('STEP 4 / 4 — 結果 / Kết quả')}${dots(3)}
+  <div class="anim">
+    <div class="eyebrow">YOUR DiSC RESULT</div>
+    <div style="font-size:14px;color:var(--dim);margin-bottom:16px">回答者 / Người tham gia: <strong style="color:var(--text)">${escHtml(st.name)}</strong></div>
+
+    <div class="type-banner ${T.bannerCls}">
+      <div class="type-emoji">${T.emoji}</div>
+      <div class="type-name-vi" style="color:${T.color}">${T.nameVI}</div>
+      <div class="type-name-en">${T.nameEN}</div>
+      <div class="type-name-jp">${T.nameJP}</div>
+      <div class="type-tagline" style="color:${T.color}">${T.taglineVI}</div>
+      <div style="font-size:12px;color:var(--dim);margin-top:4px">${T.taglineJP}</div>
+      <div class="profile-badge" style="background:${T.color}">Profile: ${primary} / ${secondary}</div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--dim);margin-bottom:14px;text-transform:uppercase">📊 Score Breakdown</h3>
+      <div class="score-bars">${scoreBars}</div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;color:${T.color};margin-bottom:16px;text-transform:uppercase">${T.emoji} メインタイプの特徴 / Primary Type Traits</h3>
+      <div class="traits-grid">
+        <div class="trait-card">
+          <h4>🇯🇵 行動傾向</h4>
+          <ul>${toList(T.traitsJP)}</ul>
+        </div>
+        <div class="trait-card">
+          <h4>🇻🇳 Đặc điểm hành vi</h4>
+          <ul>${toList(T.traitsVI)}</ul>
+        </div>
+      </div>
+      <div class="traits-grid">
+        <div class="trait-card">
+          <h4>🇯🇵 対人関係</h4>
+          <ul>${toList(T.relJP)}</ul>
+        </div>
+        <div class="trait-card">
+          <h4>🇻🇳 Quan hệ giữa người với người</h4>
+          <ul>${toList(T.relVI)}</ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="border-left:4px solid ${T2.color}">
+      <h3 style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;color:${T2.color};margin-bottom:12px;text-transform:uppercase">${T2.emoji} サブタイプ / Secondary Type: ${T2.nameJP}</h3>
+      <div style="font-size:13px;color:var(--dim);margin-bottom:8px">${T2.nameEN} / ${T2.nameVI}</div>
+      <div class="desc-section">
+        <h4>🇯🇵 特徴</h4>
+        <ul>${toList(T2.traitsJP)}</ul>
+      </div>
+      <div class="desc-section">
+        <h4>🇻🇳 Đặc điểm</h4>
+        <ul>${toList(T2.traitsVI)}</ul>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:24px">
+      <button class="btn-secondary" onclick="restart()">もう一度 / Làm lại</button>
+    </div>
+  </div>`;
+}
+
+// ==========================================
+// ロジック
+// ==========================================
+function startAssessment() {
+  const nameVal = document.getElementById('nameInput').value.trim();
+  if (!nameVal) {
+    const input = document.getElementById('nameInput');
+    input.style.borderColor = '#c0392b';
+    input.placeholder = '⚠ Vui lòng nhập tên của bạn / 名前を入力してください';
+    input.focus();
+    return;
+  }
+  st.name = nameVal;
+  st.screen = 'question';
+  st.currentQ = 0;
+  st.answers = Array.from({length: 14}, () => ({ most: null, least: null }));
+  render();
+}
+
+function pickMost(type) {
+  const ans = st.answers[st.currentQ];
+  if (ans.most === type) { ans.most = null; }
+  else { ans.most = type; }
+  render();
+}
+
+function pickLeast(type) {
+  const ans = st.answers[st.currentQ];
+  if (ans.least === type) { ans.least = null; }
+  else { ans.least = type; }
+  render();
+}
+
+function nextQ() {
+  const ans = st.answers[st.currentQ];
+  if (!ans.most || !ans.least) return;
+  if (st.currentQ + 1 >= QUESTIONS.length) {
+    const scores = calcScores();
+    const sorted = Object.keys(scores).sort((a,b) => scores[b] - scores[a]);
+    sendResult(st.name, sorted[0], sorted[1], scores);
+    st.screen = 'result';
+    render();
+    setTimeout(() => {
+      const max = Math.max(...Object.values(scores));
+      const min = Math.min(...Object.values(scores));
+      const range = max - min || 1;
+      Object.entries(scores).forEach(([k, v]) => {
+        const el = document.getElementById('bar-' + k);
+        if (el) el.style.width = Math.max(4, Math.round((v - min) / range * 100)) + '%';
+      });
+    }, 100);
+  } else {
+    st.currentQ++;
+    render();
+  }
+}
+
+function calcScores() {
+  // Most: +2点, Least: -1点
+  const scores = {D:0, i:0, S:0, C:0};
+  st.answers.forEach((ans, qi) => {
+    if (ans.most) scores[ans.most] += 2;
+    if (ans.least) scores[ans.least] -= 1;
+  });
+  return scores;
+}
+
+function prevQ() {
+  if (st.currentQ > 0) { st.currentQ--; render(); }
+}
+
+function restart() {
+  st = { screen:'intro', name: st.name, answers: Array.from({length:14}, ()=>({most:null,least:null})), currentQ: 0 };
+  render();
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function render() {
+  const app = document.getElementById('app');
+  if (st.screen === 'intro') app.innerHTML = renderIntro();
+  else if (st.screen === 'question') app.innerHTML = renderQuestion();
+  else app.innerHTML = renderResult();
+  window.scrollTo(0, 0);
+}
+
+render();
+</script>
+</body>
+</html>
